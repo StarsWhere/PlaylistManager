@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
@@ -64,7 +64,7 @@ namespace PlaylistManager.UI
             this.popupModalsController = popupModalsController;
             this.pluginMetadata = pluginMetadata.Value;
             this.bsmlParser = bsmlParser;
-            folderIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("PlaylistManager.Icons.FolderIcon.png");
+            folderIcon = PlaylistMods.Common.SpriteLoader.FromResource(typeof(PlaylistManager.Plugin).Assembly, "PlaylistManager.Icons.FolderIcon.png");
             parsed = false;
         }
 

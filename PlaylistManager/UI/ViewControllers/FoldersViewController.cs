@@ -1,4 +1,4 @@
-﻿using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.FloatingScreen;
@@ -87,11 +87,11 @@ namespace PlaylistManager.UI
             this.pluginMetadata = pluginMetadata.Value;
             this.bsmlParser = bsmlParser;
 
-            levelPacksSprite = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("PlaylistManager.Icons.LevelPacks.png");
-            customPacksSprite = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("PlaylistManager.Icons.CustomPacks.png");
-            playlistsSprite = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("PlaylistManager.Icons.Playlists.png");
-            foldersSprite = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("PlaylistManager.Icons.Folders.png");
-            folderIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("PlaylistManager.Icons.FolderIcon.png");
+            levelPacksSprite = PlaylistMods.Common.SpriteLoader.FromResource(typeof(PlaylistManager.Plugin).Assembly, "PlaylistManager.Icons.LevelPacks.png");
+            customPacksSprite = PlaylistMods.Common.SpriteLoader.FromResource(typeof(PlaylistManager.Plugin).Assembly, "PlaylistManager.Icons.CustomPacks.png");
+            playlistsSprite = PlaylistMods.Common.SpriteLoader.FromResource(typeof(PlaylistManager.Plugin).Assembly, "PlaylistManager.Icons.Playlists.png");
+            foldersSprite = PlaylistMods.Common.SpriteLoader.FromResource(typeof(PlaylistManager.Plugin).Assembly, "PlaylistManager.Icons.Folders.png");
+            folderIcon = PlaylistMods.Common.SpriteLoader.FromResource(typeof(PlaylistManager.Plugin).Assembly, "PlaylistManager.Icons.FolderIcon.png");
 
             tableCells = new List<CustomListTableData.CustomCellInfo>();
             folderMode = FolderMode.None;

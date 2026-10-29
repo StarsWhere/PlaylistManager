@@ -1,4 +1,4 @@
-﻿using BeatSaberMarkupLanguage;
+using BeatSaberMarkupLanguage;
 using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using BeatSaberMarkupLanguage.Parser;
@@ -65,7 +65,7 @@ namespace PlaylistManager.UI
             }
 
             coverImages = new Dictionary<string, CoverImage>();
-            playlistManagerIcon = BeatSaberMarkupLanguage.Utilities.FindSpriteInAssembly("PlaylistManager.Icons.DefaultIcon.png");
+            playlistManagerIcon = PlaylistMods.Common.SpriteLoader.FromResource(typeof(PlaylistManager.Plugin).Assembly, "PlaylistManager.Icons.DefaultIcon.png");
             parsed = false;
         }
 

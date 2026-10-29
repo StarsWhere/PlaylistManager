@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using BeatSaberPlaylistsLib;
@@ -63,7 +63,7 @@ namespace PlaylistManager.Types
                     {
                         var imageBytes = new byte[imageStream.Length];
                         imageStream.Read(imageBytes, 0, (int)imageStream.Length);
-                        coverImage._sprite = BeatSaberMarkupLanguage.Utilities.LoadSpriteRaw(imageBytes);
+                        coverImage._sprite = PlaylistMods.Common.SpriteLoader.FromBytes(imageBytes);
                         if (coverImage._sprite != null)
                         {
                             coverImage.SpriteWasLoaded = true;
