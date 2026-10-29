@@ -1,0 +1,3 @@
+[submodule "vendor/BeatSage"]
+	path = vendor/BeatSage
+	url = https://github.com/StarsWhere/BeatSage.git
