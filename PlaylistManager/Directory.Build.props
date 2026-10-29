@@ -3,11 +3,8 @@
 <Project>
 
   <PropertyGroup>
-    <BSMTProjectType>BSIPA</BSMTProjectType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' != 'Release'">
-    <DisableZipRelease>true</DisableZipRelease>
+    <GameRoot Condition="'$(GameRoot)' == ''">$(BEAT_SABER_DIR)</GameRoot>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)..\.tmp\build\obj\</BaseIntermediateOutputPath>
   </PropertyGroup>
 
 </Project>
