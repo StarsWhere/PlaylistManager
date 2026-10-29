@@ -40,3 +40,17 @@ Huge thanks for both Auros and Zingabopp for their co-operation as well as their
 Auros helped me do a full plugin rewrite with Zenject, allowing for a more optimized mod and Zingabopp created the BeatSaberPlaylistsLib library, which is what I depend on with this mod.
 
 ![Screenshot](https://github.com/rithik-b/PlaylistManager/blob/master/img/screenshot.png?raw=true)
+
+## Beat Saber 1.45.2 compatibility
+
+This fork's `compat/bs-1.45.2` branch targets Windows x64 / Beat Saber `1.45.2_28848`. Use PowerShell 7, a .NET SDK, and a game installation with the compatible external mod dependencies.
+
+```powershell
+git clone --recurse-submodules --branch compat/bs-1.45.2 https://github.com/StarsWhere/PlaylistManager.git
+cd PlaylistManager
+pwsh -File scripts/build.ps1 -GameRoot 'C:\Games\Beat Saber'
+```
+
+The build only reads game references and writes its outputs under `.tmp/`. It does not install files or run gameplay tests. Original upstream licensing and authorship are retained.
+
+SongPackageIO is built from the pinned BeatSage source submodule; the BeatSage plugin itself is not a runtime requirement. `Shared/SpriteLoader.cs` is also consumed by MorePlaylists.
