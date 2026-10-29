@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading;
 using PlaylistManager.Downloaders;
 using PlaylistManager.UI;
+using OculusStudios.Platform.Core;
 
 namespace PlaylistManager.Managers
 {
@@ -26,13 +27,13 @@ namespace PlaylistManager.Managers
 
         private readonly List<ILevelCategoryUpdater> levelCategoryUpdaters;
         private readonly IPMRefreshable refreshable;
-        private readonly IPlatformUserModel platformUserModel;
+        [Inject(Optional = true)] private IPlatform platform;
 
         public event Action<IReadOnlyList<BeatmapLevelPack>, int> LevelCollectionTableViewUpdatedEvent;
 
         internal PlaylistUIManager(AnnotatedBeatmapLevelCollectionsViewController annotatedBeatmapLevelCollectionsViewController, LevelCollectionNavigationController levelCollectionNavigationController,
             SelectLevelCategoryViewController selectLevelCategoryViewController, SettingsViewController settingsViewController, PlaylistSequentialDownloader playlistDownloader,
-            List<ILevelCategoryUpdater> levelCategoryUpdaters, IPMRefreshable refreshable, IPlatformUserModel platformUserModel)
+            List<ILevelCategoryUpdater> levelCategoryUpdaters, IPMRefreshable refreshable)
         {
             this.annotatedBeatmapLevelCollectionsViewController = annotatedBeatmapLevelCollectionsViewController;
             this.levelCollectionNavigationController = levelCollectionNavigationController;
@@ -42,7 +43,6 @@ namespace PlaylistManager.Managers
 
             this.levelCategoryUpdaters = levelCategoryUpdaters;
             this.refreshable = refreshable;
-            this.platformUserModel = platformUserModel;
         }
 
         public void Initialize()
@@ -145,23 +145,13 @@ namespace PlaylistManager.Managers
             refreshable.Refresh();
         }
 
-        private async void AssignAuthor()
+        private void AssignAuthor()
         {
             if (PluginConfig.Instance.AutomaticAuthorName)
             {
-                var user = await platformUserModel.GetUserInfo(CancellationToken.None);
-                if (PluginConfig.Instance.AuthorName == null && user == null)
-                {
-                    PluginConfig.Instance.AuthorName = nameof(PlaylistManager);
-                }
-                else
-                {
-                    PluginConfig.Instance.AuthorName = user?.userName ?? PluginConfig.Instance.AuthorName;
-                }
-            }
-            else
-            {
-                PluginConfig.Instance.AuthorName = PluginConfig.Instance.AuthorName;
+                var playerName = platform?.user?.displayName;
+                if (!String.IsNullOrWhiteSpace(playerName)) PluginConfig.Instance.AuthorName = playerName;
+                else if (String.IsNullOrWhiteSpace(PluginConfig.Instance.AuthorName)) PluginConfig.Instance.AuthorName = nameof(PlaylistManager);
             }
         }
     }

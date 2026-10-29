@@ -122,7 +122,8 @@ namespace PlaylistManager.UI
 
             var levelPaths = selectedPlaylist.BeatmapLevels
                 .Where(l => !l.hasPrecalculatedData)
-                .Select(l => SongCore.Collections.GetLoadedSaveData(l.levelID)?.customLevelFolderInfo.folderPath)
+                .Select(l => Loader.CustomLevelLoader._loadedBeatmapSaveData.TryGetValue(l.levelID, out var saveData)
+                    ? saveData.customLevelFolderInfo.folderPath : null)
                 .Where(p => p != null)
                 .ToList();
             await loader.DeleteSongsAsync(levelPaths);
@@ -241,18 +242,24 @@ namespace PlaylistManager.UI
             }
 
             var syncURL = (string)outSyncURL;
-            var tokenSource = new CancellationTokenSource();
+            using var tokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(90));
 
             popupModalsController.ShowOkModal(rootTransform, "Syncing Playlist", () => tokenSource.Cancel(), "Cancel");
-            Stream playlistStream = null;
 
             try
             {
                 var httpResponse = await siraHttpService.GetAsync(syncURL, cancellationToken: tokenSource.Token);
                 if (httpResponse.Successful)
                 {
-                    selectedPlaylist.Clear(); // Clear all songs
-                    PlaylistLibUtils.playlistManager.DefaultHandler.Populate(await httpResponse.ReadAsStreamAsync(), selectedPlaylist);
+                    var handler = parentManager.GetHandlerForPlaylistType(selectedPlaylist.GetType())
+                        ?? throw new InvalidDataException("No handler is registered for the selected playlist");
+                    var payload = await httpResponse.ReadAsByteArrayAsync();
+                    using (var validationStream = new MemoryStream(payload))
+                        handler.Deserialize(validationStream); // Handlers own and close their input stream.
+                    tokenSource.Token.ThrowIfCancellationRequested();
+                    using var stream = new MemoryStream(payload);
+                    selectedPlaylist.Clear();
+                    handler.Populate(stream, selectedPlaylist);
                     selectedPlaylist.RaisePlaylistChanged();
                     parentManager.StorePlaylist(selectedPlaylist);
                 }
@@ -267,12 +274,13 @@ namespace PlaylistManager.UI
             {
                 if (!(e is TaskCanceledException))
                 {
+                    Plugin.Log.Error($"Playlist sync failed for {selectedPlaylist.Title}: {e}");
                     popupModalsController.OkText = "Error: The selected playlist cannot be synced";
                     popupModalsController.OkButtonText = "Ok";
                 }
                 return;
             }
-            finally
+            // Success controls belong after the failure returns, rather than in finally.
             {
                 // If the downloaded playlist doesn't have the sync url, add it back
                 if (!selectedPlaylist.TryGetCustomData("syncURL", out outSyncURL))

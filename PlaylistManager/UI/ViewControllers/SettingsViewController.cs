@@ -1,6 +1,7 @@
-﻿using BeatSaberMarkupLanguage.Attributes;
+using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.ViewControllers;
 using PlaylistManager.Configuration;
+using PlaylistManager.AffinityPatches;
 using System;
 using Zenject;
 
@@ -11,6 +12,7 @@ namespace PlaylistManager.UI
     internal class SettingsViewController : BSMLAutomaticViewController
     {
         private MenuTransitionsHelper menuTransitionsHelper;
+        private LevelCollectionCellSetDataPatch hoverHints;
 
         private bool _defaultImageDisabled;
         private bool _defaultAllowDuplicates;
@@ -21,7 +23,6 @@ namespace PlaylistManager.UI
         private bool _blurredArt;
         private bool _foldersDisabled;
         private int _syncOption;
-        private bool _downloadDuringGameplay;
         private bool _driveFullProtection;
         private bool _easterEggs;
 
@@ -29,9 +30,10 @@ namespace PlaylistManager.UI
         public event Action NameFetchRequestedEvent;
 
         [Inject]
-        public void Construct(MenuTransitionsHelper menuTransitionsHelper)
+        public void Construct(MenuTransitionsHelper menuTransitionsHelper, LevelCollectionCellSetDataPatch hoverHints)
         {
             this.menuTransitionsHelper = menuTransitionsHelper;
+            this.hoverHints = hoverHints;
         }
 
         protected override void DidActivate(bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling)
@@ -48,7 +50,6 @@ namespace PlaylistManager.UI
             BlurredArt = PluginConfig.Instance.BlurredArt;
             FoldersDisabled = PluginConfig.Instance.FoldersDisabled;
             SyncOption = (int)PluginConfig.Instance.SyncOption;
-            DownloadDuringGameplay = PluginConfig.Instance.DownloadDuringGameplay;
             DriveFullProtection = PluginConfig.Instance.DriveFullProtection;
             EasterEggs = PluginConfig.Instance.EasterEggs;
         }
@@ -61,6 +62,7 @@ namespace PlaylistManager.UI
         {
             var fetchName = !PluginConfig.Instance.AutomaticAuthorName && AutomaticAuthorName;
             var softRestart = SoftRestart;
+            var hoverHintsChanged = PlaylistHoverHints != PluginConfig.Instance.PlaylistHoverHints;
 
             // Save all values to config
             PluginConfig.Instance.DefaultImageDisabled = DefaultImageDisabled;
@@ -72,9 +74,10 @@ namespace PlaylistManager.UI
             PluginConfig.Instance.BlurredArt = BlurredArt;
             PluginConfig.Instance.FoldersDisabled = FoldersDisabled;
             PluginConfig.Instance.SyncOption = (PluginConfig.SyncOptions)SyncOption;
-            PluginConfig.Instance.DownloadDuringGameplay = DownloadDuringGameplay;
             PluginConfig.Instance.DriveFullProtection = DriveFullProtection;
             PluginConfig.Instance.EasterEggs = EasterEggs;
+
+            if (hoverHintsChanged) hoverHints.RefreshHoverHints();
 
             if (softRestart)
             {
@@ -158,7 +161,6 @@ namespace PlaylistManager.UI
             {
                 _playlistHoverHints = value;
                 NotifyPropertyChanged(nameof(PlaylistHoverHints));
-                NotifyPropertyChanged(nameof(SoftRestart));
             }
         }
 
@@ -211,17 +213,6 @@ namespace PlaylistManager.UI
             }
         }
 
-        [UIValue("gameplay-download")]
-        private bool DownloadDuringGameplay
-        {
-            get => _downloadDuringGameplay;
-            set
-            {
-                _downloadDuringGameplay = value;
-                NotifyPropertyChanged(nameof(DownloadDuringGameplay));
-            }
-        }
-
         [UIValue("drive-protection")]
         private bool DriveFullProtection
         {
@@ -247,7 +238,6 @@ namespace PlaylistManager.UI
         #endregion
 
         [UIValue("soft-restart")]
-        private bool SoftRestart => PlaylistHoverHints != PluginConfig.Instance.PlaylistHoverHints ||
-            FoldersDisabled != PluginConfig.Instance.FoldersDisabled;
+        private bool SoftRestart => FoldersDisabled != PluginConfig.Instance.FoldersDisabled;
     }
 }

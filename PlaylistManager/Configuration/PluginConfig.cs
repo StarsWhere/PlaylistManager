@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using IPA.Config.Stores;
 using IPA.Config.Stores.Attributes;
 using IPA.Config.Stores.Converters;
@@ -18,7 +18,6 @@ namespace PlaylistManager.Configuration
         public virtual bool BlurredArt { get; set; } = true;
         public virtual bool HighlightDifficulty { get; set; } = true;
         public virtual bool EasterEggs { get; set; } = false;
-        public virtual bool DownloadDuringGameplay { get; set; } = false;
         public virtual bool DriveFullProtection { get; set; } = true;
         public virtual bool ShowDownloadIcon { get; set; } = true;
 

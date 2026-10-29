@@ -6,6 +6,7 @@ using HMUI;
 using PlaylistManager.Configuration;
 using PlaylistManager.UI;
 using SiraUtil.Affinity;
+using UnityEngine;
 
 /*
  * Original Author: Auros
@@ -40,18 +41,38 @@ namespace PlaylistManager.AffinityPatches
                 playlist.SpriteLoaded += OnSpriteLoaded;
             }
 
-            if (PluginConfig.Instance.PlaylistHoverHints)
+            UpdateHoverHint(__instance, beatmapLevelPack);
+        }
+
+        internal void RefreshHoverHints()
+        {
+            foreach (var cell in Resources.FindObjectsOfTypeAll<AnnotatedBeatmapLevelCollectionCell>())
             {
-                var hoverHint = __instance.GetComponent<HoverHint>();
-
-                if (hoverHint == null)
-                {
-                    hoverHint = __instance.gameObject.AddComponent<HoverHint>();
-                    Accessors.HoverHintControllerAccessor(ref hoverHint) = hoverHintController;
-                }
-
-                hoverHint.text = beatmapLevelPack.packName;
+                if (cell.gameObject.scene.IsValid()) UpdateHoverHint(cell, cell._beatmapLevelPack);
             }
+        }
+
+        private void UpdateHoverHint(AnnotatedBeatmapLevelCollectionCell cell, BeatmapLevelPack pack)
+        {
+            var ownedHint = cell.GetComponent<PlaylistNameHoverHint>();
+            if (!PluginConfig.Instance.PlaylistHoverHints || pack == null)
+            {
+                // OnDisable dismisses an already visible native tooltip immediately.
+                if (ownedHint != null) ownedHint.enabled = false;
+                return;
+            }
+
+            if (ownedHint == null)
+            {
+                // Leave components supplied by the game or another mod untouched.
+                if (cell.GetComponent<HoverHint>() != null) return;
+                ownedHint = cell.gameObject.AddComponent<PlaylistNameHoverHint>();
+                HoverHint hint = ownedHint;
+                Accessors.HoverHintControllerAccessor(ref hint) = hoverHintController;
+            }
+
+            ownedHint.text = pack.packName;
+            ownedHint.enabled = true;
         }
 
         private void OnSpriteLoaded(object sender, EventArgs e)
@@ -73,5 +94,9 @@ namespace PlaylistManager.AffinityPatches
             // TODO: Figure out why this needs to be done here and in UpdatePlaylist when switching covers. Worth noting that this event is invoked twice as well.
             playlistUpdater.RefreshAnnotatedBeatmapCollection(tableCell._beatmapLevelPack);
         }
+    }
+
+    internal sealed class PlaylistNameHoverHint : HoverHint
+    {
     }
 }

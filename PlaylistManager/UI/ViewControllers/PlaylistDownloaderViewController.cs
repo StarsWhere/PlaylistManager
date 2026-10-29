@@ -3,11 +3,11 @@ using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
 using HMUI;
 using System;
+using System.Threading.Tasks;
 using IPA.Loader;
 using PlaylistManager.Downloaders;
 using SiraUtil.Zenject;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using Zenject;
 
 namespace PlaylistManager.UI
@@ -19,7 +19,9 @@ namespace PlaylistManager.UI
         private PluginMetadata pluginMetadata;
         private BSMLParser bsmlParser;
         private bool parsed;
-        private bool refreshRequested;
+        private bool disposed;
+        private PlaylistManager.Types.PopupContents shownDownloadPopup;
+        private Task popupUiTask = Task.CompletedTask;
 
         [UIComponent("download-list")]
         private readonly CustomCellListTableData customListTableData;
@@ -59,14 +61,13 @@ namespace PlaylistManager.UI
         {
             playlistDownloader.PopupEvent += OnPopupRequested;
             playlistDownloader.QueueUpdatedEvent += UpdateQueue;
-            SceneManager.activeSceneChanged += OnMenuLoaded;
         }
 
         public void Dispose()
         {
+            disposed = true;
             playlistDownloader.PopupEvent -= OnPopupRequested;
             playlistDownloader.QueueUpdatedEvent -= UpdateQueue;
-            SceneManager.activeSceneChanged -= OnMenuLoaded;
         }
 
         [UIAction("#post-parse")]
@@ -80,19 +81,32 @@ namespace PlaylistManager.UI
 
         private void OnPopupRequested()
         {
-            if (playlistDownloader.PendingPopup != null && parsed)
+            if (!disposed && parsed)
             {
-                IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(DontMessWithGameObjectsOffMainThread);
+                popupUiTask = IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(() =>
+                {
+                    try { RefreshPendingPopup(); }
+                    catch (Exception exception) { Plugin.Log.Error("Cannot update playlist download confirmation: " + exception); }
+                });
             }
         }
 
-        private void DontMessWithGameObjectsOffMainThread()
+        private void RefreshPendingPopup()
         {
-            playlistDownloader.PendingPopup.parent = rootTransform;
-            playlistDownloader.PendingPopup.animateParentCanvas = !rootTransform.GetComponentInParent<ModalView>();
+            var popup = playlistDownloader.PendingPopup;
+            if (disposed || !parsed || rootTransform == null) return;
+            if (popup == null)
+            {
+                if (shownDownloadPopup != null) popupModalsController.HideYesNoModal();
+                shownDownloadPopup = null;
+                return;
+            }
+            popup.parent = rootTransform;
+            popup.animateParentCanvas = !rootTransform.GetComponentInParent<ModalView>();
             if (rootTransform.gameObject.activeInHierarchy)
             {
-                popupModalsController.ShowModal(playlistDownloader.PendingPopup);
+                popupModalsController.ShowModal(popup);
+                shownDownloadPopup = popup;
             }
         }
 
@@ -101,27 +115,6 @@ namespace PlaylistManager.UI
             if (customListTableData != null)
             {
                 customListTableData.TableView.ReloadDataKeepingPosition();
-            }
-
-            if (PlaylistSequentialDownloader.downloadQueue.Count == 0)
-            {
-                if (SceneManager.GetActiveScene().name == "GameCore")
-                {
-                    refreshRequested = true;
-                }
-                else
-                {
-                    playlistDownloader.OnQueueClear();
-                }
-            }
-        }
-
-        private void OnMenuLoaded(Scene previousScene, Scene newScene)
-        {
-            if (refreshRequested && newScene.name == "MainMenu")
-            {
-                refreshRequested = false;
-                playlistDownloader.OnQueueClear();
             }
         }
     }
