@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using IPA;
 using IPA.Config;
 using IPA.Config.Stores;
@@ -38,7 +38,6 @@ namespace PlaylistManager
             zenjector.UseSiraSync(SiraUtil.Web.SiraSync.SiraSyncServiceType.GitHub, "rithik-b");
             zenjector.Install<PlaylistManagerAppInstaller>(Location.App);
             zenjector.Install<PlaylistManagerMenuInstaller>(Location.Menu);
-            zenjector.Install<PlaylistManagerGameInstaller>(Location.GameCore);
         }
 
         #region BSIPA Config
